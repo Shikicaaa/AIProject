@@ -136,25 +136,76 @@ def play_move(board, move_str, N, player_color):
     board[(q, r)] = player_color
     print(f"Placed at {move_str} (internal: {q}, {r})")
     return True
+def game_mode():
+    while True:
+        print("\n---Select mode---")
+        print("1.Human vs Human")
+        print("2.Human vs Computer")
+        choice = input("1 or 2:")
+
+        if choice == '1':
+            return False
+        elif choice =='2':
+            return True
+        else:
+            print("Invald input,try again")
+def first_player():
+    while True:
+        print("\n---Who plays first?---")
+        print("1.Human")
+        print("2.Computer")
+        choice = input("1 or 2:")
+
+        if choice == '1':
+            return False
+        elif choice =='2':
+            return True
+        else:
+            print("Invald input,try again")
+def starting_color():
+    while True:
+        print("\n---Which color starts?---") 
+        print(f"1.Red({RED})")      
+        print(f"2.Green{GREEN}")
+        choice = input("1 or 2:")
+
+        if choice == '1':
+            return True #red
+        elif choice =='2':
+            return False #green
+        else:
+            print("Invald input,try again")
+                    
 
 
 if __name__ == "__main__":
     try:
-        N = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+        N = int(sys.argv[1]) if len(sys.argv) > 1 else int(input("Unesite dimenziju table: "))
     except:
         N = 5
 
     game_board = generate_atoll_board(N)
 
-    to_play = True
+    vs_computer  = game_mode()
+    human_starts = first_player() if vs_computer else True
+    red_starts   = starting_color()
 
-    
+    to_play_red = red_starts   # ko je prvi na potezu
+
     while True:
         render_board(game_board, N)
-        move = input("\nEnter move (e.g. E5, F1) or 'exit': ")
-        
+
+        current_color = RED if to_play_red else GREEN
+
+        print(f"Its turn: {'RED' if to_play_red else 'GREEN'}")
+
+        move = input("\nEnter move (e.g. E5) or 'exit': ")
         if move.lower() == 'exit':
-            break
-            
-        play_move(game_board, move, N, RED if to_play else GREEN)
-        to_play = not to_play
+           break
+        
+        if play_move(game_board, move, N, current_color):
+            to_play_red = not to_play_red
+        
+           
+
+        

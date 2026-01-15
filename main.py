@@ -1,9 +1,127 @@
 import sys
+from collections import deque
 
 RED   = '\U0001F534' # 🔴
 GREEN = '\U0001F7E2' # 🟢
 WHITE = '\u26AA'     # ⚪
 EMPTY = '  '         # dva razmaka
+
+
+def get_neighbors(hex_pos):
+    q, r = hex_pos
+    vectors = [(1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1)]
+    return [(q + dq, r + dr) for dq, dr in vectors]
+
+
+def get_island_groups(board, N, color):
+
+    radius = N
+    visited = set()
+    islands = []
+    
+    for pos, val in board.items():
+        q, r = pos
+        if val == color and pos not in visited:
+            if abs(q) == radius or abs(r) == radius or abs(q + r) == radius:
+                group = set()
+                queue = deque([pos])
+                visited.add(pos)
+                group.add(pos)
+                
+                while queue:
+                    curr = queue.popleft()
+                    for neighbor in get_neighbors(curr):
+                        if (neighbor in board and board[neighbor] == color and 
+                            neighbor not in visited):
+                           
+                            nq, nr = neighbor
+                            if abs(nq) == radius or abs(nr) == radius or abs(nq + nr) == radius:
+                                visited.add(neighbor)
+                                group.add(neighbor)
+                                queue.append(neighbor)
+                islands.append(group)
+    return islands
+
+
+def get_shortest_path_length(board, start_node, target_group, color):
+    queue = deque([(start_node, 1)])
+    visited = {start_node}
+    
+    while queue:
+        curr, length = queue.popleft()
+        
+        if curr in target_group:
+            return length
+        
+        for neighbor in get_neighbors(curr):
+            if neighbor in board and board[neighbor] == color and neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, length + 1))
+    return 0
+
+
+def check_victory(board, player_color, N):
+    islands = get_island_groups(board, N, player_color)
+    
+    if len(islands) < 2:
+        return False 
+    for i in range(len(islands)):
+        for j in range(i + 1, len(islands)):
+            island_a = islands[i]
+            island_b = islands[j]
+            
+            min_path = float('inf')
+            max_path = 7 if N == 5 else (10 if N == 7 else 13)
+            connected = False
+            
+            for start_node in island_a:
+                length = get_shortest_path_length(board, start_node, island_b, player_color)
+                if length > 0:
+                    connected = True
+                    if length < min_path:
+                        min_path = length
+            
+            if connected and min_path >= max_path:
+                print(f"Pobedio je {player_color}! Povezana ostrva putanjom dužine {min_path}.")
+                return True
+                
+    return False
+
+
+def is_game_over(board, N):
+    if check_victory(board, RED, N):
+        return True, RED
+    if check_victory(board, GREEN, N):
+        return True, GREEN
+    
+    if not get_all_valid_moves(board):
+        return True, "DRAW"
+        
+    return False, None
+
+
+def get_all_valid_moves(board):
+    moves = []
+    for pos, val in board.items():
+        if val == WHITE:
+            moves.append(pos)
+    return moves
+
+def apply_move(board, move, player_color):
+    # ovo je priprema za minmax kao cuvamo generisemo tablu za novi potez i proveravamo kako je tu
+    new_board = board.copy()
+    new_board[move] = player_color
+    return new_board
+
+def get_next_states(board, player_color):
+    valid_moves = get_all_valid_moves(board)
+    next_states = []
+    
+    for move in valid_moves:
+        new_state = apply_move(board, move, player_color)
+        next_states.append((move, new_state))
+        
+    return next_states
 
 
 def generate_atoll_board(N):
@@ -186,25 +304,45 @@ if __name__ == "__main__":
 
     game_board = generate_atoll_board(N)
 
-    vs_computer  = game_mode()
-    human_starts = first_player() if vs_computer else True
+    vs_computer  = game_mode() 
+    human_starts = first_player() if vs_computer else True 
     red_starts   = starting_color()
 
-    to_play_red = red_starts   # ko je prvi na potezu
+    
 
-    while True:
+    current_color = RED if red_starts else GREEN
+    
+    print(f"\nIGRA POČINJE! Prvi igra: {current_color}")
+    game_running = True
+
+    while game_running:
         render_board(game_board, N)
+        print(f"Na potezu je: {current_color}")
 
-        current_color = RED if to_play_red else GREEN
+        current_color = RED if red_starts else GREEN
 
-        print(f"Its turn: {'RED' if to_play_red else 'GREEN'}")
+        print(f"Its turn: {'RED' if red_starts else 'GREEN'}")
 
         move = input("\nEnter move (e.g. E5) or 'exit': ")
         if move.lower() == 'exit':
            break
         
         if play_move(game_board, move, N, current_color):
-            to_play_red = not to_play_red
+            red_starts = not red_starts
+
+        if check_victory(game_board, current_color, N):
+            render_board(game_board, N)
+            print(f"\n========================================")
+            print(f" KRAJ IGRE! POBEDNIK JE {current_color}")
+            print(f"========================================")
+            game_running = False
+            break
+        
+        if not get_all_valid_moves(game_board):
+            render_board(game_board, N)
+            print("\nNERESENO! Nema više slobodnih polja.")
+            game_running = False
+            break
         
            
 

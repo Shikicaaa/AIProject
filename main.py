@@ -254,6 +254,7 @@ def play_move(board, move_str, N, player_color):
     board[(q, r)] = player_color
     print(f"Placed at {move_str} (internal: {q}, {r})")
     return True
+
 def game_mode():
     while True:
         print("\n---Select mode---")
@@ -267,6 +268,7 @@ def game_mode():
             return True
         else:
             print("Invald input,try again")
+
 def first_player():
     while True:
         print("\n---Who plays first?---")
@@ -280,6 +282,7 @@ def first_player():
             return True
         else:
             print("Invald input,try again")
+
 def starting_color():
     while True:
         print("\n---Which color starts?---") 
@@ -295,6 +298,113 @@ def starting_color():
             print("Invald input,try again")
                     
 
+def process_turn(board, N, color):
+    while True:
+        move = input("\nEnter move (e.g. E5) or 'exit': ")
+
+        if move.lower() == 'exit':
+            sys.exit()
+
+        if play_move(board, move, N, color):
+            return
+
+        print("Try again.")
+
+
+def setup_custom_board(board, N, red_starts):
+    while True:
+        print("\nEnter the state sequence (e.g., 'e2 g e4 g a5 r'):")
+        raw_input = input("Input: ").strip().lower()
+
+        if not raw_input:
+            print("Starting with an empty board.")
+            break
+
+        parts = raw_input.split()
+
+        if len(parts) % 2 != 0:
+            print("Error: Invalid sequence. Each position must have a color (R or G).")
+            continue
+
+        temp_moves = []
+        is_valid = True
+
+        # Brojaci za proveru razlike
+        count_r = 0
+        count_g = 0
+
+        for i in range(0, len(parts), 2):
+            pos_str = parts[i]
+            color_code = parts[i + 1].upper()
+
+            if color_code == 'R':
+                color = RED
+                count_r += 1
+            elif color_code == 'G':
+                color = GREEN
+                count_g += 1
+            else:
+                print(f"Error: Invalid color code '{color_code}'.")
+                is_valid = False
+                break
+
+            coords = parse_move(pos_str, N)
+            if coords is None or coords not in board:
+                print(f"Error: Position '{pos_str}' is invalid.")
+                is_valid = False
+                break
+
+            if board[coords] != WHITE:
+                print(f"Error: Position '{pos_str}' is not a free field.")
+                is_valid = False
+                break
+
+            temp_moves.append((coords, color))
+
+        if is_valid:
+            diff = count_r - count_g
+
+            if red_starts:
+                if not (diff == 0 or diff == 1):
+                    print(f"Error: Invalid stone count. Red started, but Red has {count_r} and Green has {count_g}.")
+                    is_valid = False
+            else:
+                if not (diff == 0 or diff == -1):
+                    print(f"Error: Invalid stone count. Green started, but Green has {count_g} and Red has {count_r}.")
+                    is_valid = False
+
+        if is_valid:
+            for coords, color in temp_moves:
+                board[coords] = color
+            print("State successfully set!")
+            break
+        else:
+            print("Please re-enter the entire sequence correctly.")
+
+
+def determine_next_player(board, red_starts):
+    red_count = 0
+    green_count = 0
+
+    for color in board.values():
+        if color == RED:
+            red_count += 1
+        elif color == GREEN:
+            green_count += 1
+
+    if red_starts:
+        if red_count == green_count:
+            return True
+        elif red_count > green_count:
+            return False
+    else:
+        if green_count == red_count:
+            return False
+        elif green_count > red_count:
+            return True
+
+    return True if red_count <= green_count else False
+
 
 if __name__ == "__main__":
     try:
@@ -305,30 +415,28 @@ if __name__ == "__main__":
     game_board = generate_atoll_board(N)
 
     vs_computer  = game_mode() 
+
     human_starts = first_player() if vs_computer else True 
+
     red_starts   = starting_color()
 
-    
+    print("\nDo you want set a state of the board? (y/n)")
+    if input().lower() == 'y':
+        setup_custom_board(game_board, N, red_starts)
+        to_play_red = determine_next_player(game_board, red_starts)
+    else:
+        to_play_red = red_starts
 
-    current_color = RED if red_starts else GREEN
-    
-    print(f"\nIGRA POČINJE! Prvi igra: {current_color}")
     game_running = True
 
     while game_running:
         render_board(game_board, N)
-        print(f"Na potezu je: {current_color}")
 
-        current_color = RED if red_starts else GREEN
+        current_color = RED if to_play_red else GREEN
 
-        print(f"Its turn: {'RED' if red_starts else 'GREEN'}")
+        print(f"Its turn: {'RED' if to_play_red else 'GREEN'}")
 
-        move = input("\nEnter move (e.g. E5) or 'exit': ")
-        if move.lower() == 'exit':
-           break
-        
-        if play_move(game_board, move, N, current_color):
-            red_starts = not red_starts
+        process_turn(game_board, N, current_color)
 
         if check_victory(game_board, current_color, N):
             render_board(game_board, N)
@@ -343,5 +451,7 @@ if __name__ == "__main__":
             print("\nNERESENO! Nema više slobodnih polja.")
             game_running = False
             break
+
+        to_play_red = not to_play_red
         
            

@@ -83,7 +83,7 @@ def check_victory(board, player_color, N,silent=False):
             
             if connected and min_path >= max_path:
                if not silent:
-                    print(f"Pobedio je {player_color}! Povezana ostrva putanjom dužine {min_path}.")
+                    print(f"Pobedio je {player_color}! Povezana ostrva putanjom duzine {min_path}.")
                     return True
                 
     return False
@@ -406,17 +406,12 @@ def determine_next_player(board, red_starts):
 
     return True if red_count <= green_count else False
 def heuristic_evaluation(board, player_color, N):
-    """
-    Vrši procenu stanja na osnovu pravila zaključivanja.
-    Vraća: int (pozitivan broj ako 'player_color' vodi, negativan ako gubi).
-    """
-    
-    # 1. Definisanje protivnika
+   
+    #procena stanja na osnovu pravila zakljucivanja,vraca int pozitivan broj ako player_color vodi ako negativan gubi
+    #protivnik
     opponent = GREEN if player_color == RED else RED
     
-    # --- PRAVILO 1: Da li je kraj igre? ---
-    # Ovo je apsolutni zaključak. Ako je pobeda, vraćamo ogroman skor.
-    # Koristimo silent=True da ne bi ispisivao tekst dok računar "razmišlja"
+    #provera pobede vraca neki mnogo veliki broj ako je pobela ili negativan ako izgubi
     if check_victory(board, player_color, N, silent=True):
         return 100000 
     if check_victory(board, opponent, N, silent=True):
@@ -424,32 +419,31 @@ def heuristic_evaluation(board, player_color, N):
 
     score = 0
     
-    # --- PRAVILO 2: Analiza povezanosti (Najvažnije za Atoll) ---
-    # Zaključujemo: Što je duža najkraća putanja između mojih ostrva, to sam bliži pobedi.
     
+    #sto je duza najkraca putanja izmedju mojih ostrva to sam blizi pobedi
+    #broj figura *10,duzina puta*100,pobeda vracamo 100,000
     my_islands = get_island_groups(board, N, player_color)
     
-    # Ako imam bar 2 grupe (ostrva), tražim najbolju vezu između njih
+    #ako ima bar 2 grupe ostrva
     if len(my_islands) >= 2:
         max_path_len = 0
         
-        # Prolazimo kroz sve parove ostrva da nađemo najdužu postojeću vezu
+        #trazimo najduzu vezu izmedju 2 razdvojene grupe ostrva
         for i in range(len(my_islands)):
             for j in range(i + 1, len(my_islands)):
                 group_a = my_islands[i]
                 group_b = my_islands[j]
                 
-                # Uzimamo svaki čvor iz grupe A i tražimo put do grupe B
                 for start_node in group_a:
                     length = get_shortest_path_length(board, start_node, group_b, player_color)
+                    #pamtimo samo najduzu nadjenu vezu jer ona donosi najvise poena
                     if length > max_path_len:
                         max_path_len = length
         
-        # Bodujemo dužinu puta. Množimo sa 100 jer je ovo mnogo bitnije od broja figura.
+        # bodujemo sa *100 jer je povezanost bitnija od broja figura
         score += max_path_len * 100
 
-    # --- PRAVILO 3: Materijalna prednost ---
-    # Zaključujemo: Više figura na tabli daje više opcija za povezivanje.
+    #vise figura veca mogucnost za spajanje
     player_stones = 0
     opponent_stones = 0
     for val in board.values():
@@ -460,10 +454,10 @@ def heuristic_evaluation(board, player_color, N):
             
     score += (player_stones - opponent_stones) * 10
 
-    # --- PRAVILO 4: Defanzivno zaključivanje ---
-    # Ako protivnik ima dobre veze, moramo to kazniti (smanjiti skor)
-    # Ovo tera AI da blokira protivnika.
+    #Odbrana od protivnika
+    #spijunira protivnika bukv provera protivnikove grupe figura
     opp_islands = get_island_groups(board, N, opponent)
+    #merimo protivnikovu najduzu vezu ima(ako je 2 npr onda nije tolko jako ako je npr 8 onda je bas lose)
     if len(opp_islands) >= 2:
         opp_max_path = 0
         for i in range(len(opp_islands)):
@@ -475,12 +469,12 @@ def heuristic_evaluation(board, player_color, N):
                     if length > opp_max_path:
                         opp_max_path = length
         
-        # Oduzimamo poene ako je protivnik jak
+        # score je ocena koliko je dobra situacija po nas,ako nije oduzimamo poene
         score -= opp_max_path * 100
 
     return score
 if __name__ == "__main__":
-    import random # Trebaće nam za privremeni random potez
+    import random 
 
     try:
         N = int(sys.argv[1]) if len(sys.argv) > 1 else int(input("Unesite dimenziju table: "))
@@ -491,11 +485,10 @@ if __name__ == "__main__":
 
     vs_computer = game_mode() 
 
-    # --- ISPRAVKA LOGIKE KO IGRA PRVI ---
-    # Tvoja funkcija first_player vraća: False (Human), True (Computer)
+    # ko igra prvi
     computer_plays_first = first_player() if vs_computer else False
     
-    red_starts = starting_color() # True ako je Crveni, False ako je Zeleni
+    red_starts = starting_color() # true ako je crveni ,false za zelenog
 
     print("\nDo you want set a state of the board? (y/n)")
     if input().lower() == 'y':
@@ -504,20 +497,20 @@ if __name__ == "__main__":
     else:
         to_play_red = red_starts
 
-    # --- ODREĐIVANJE BOJA ---
+    # biranje boja
     computer_color = None
     if vs_computer:
         if computer_plays_first:
-            # Ako komp igra prvi, uzima boju koja startuje (red_starts)
+            # ako komp startuje on bira prvi boju(red_starts)
             computer_color = RED if red_starts else GREEN
         else:
-            # Ako čovek igra prvi, komp uzima suprotnu
+            # Ako covek startuje on prvi bira,komp suprotno
             if red_starts:
-                computer_color = GREEN # Čovek je RED
+                computer_color = GREEN # covek je RED
             else:
-                computer_color = RED   # Čovek je GREEN
+                computer_color = RED   # covek je GREEN
         
-        print(f"Računar igra kao: {computer_color}")
+        print(f"Komp igra kao: {computer_color}")
 
     game_running = True
 
@@ -527,31 +520,29 @@ if __name__ == "__main__":
         current_color = RED if to_play_red else GREEN
         print(f"Na potezu je: {'RED' if to_play_red else 'GREEN'} {current_color}")
 
-        # --- GLAVNA PROMENA: RAZLIKOVANJE POTEZA ---
+        # -razlikovanje poteza
         if vs_computer and current_color == computer_color:
-            print(f"Računar ({current_color}) razmišlja...")
+            print(f"Racunar ({current_color}) razmislja...")
             
-            # OVDE ĆE IĆI MIN-MAX POZIV KASNIJE
-            # Za sada: Slučajan potez da testiraš petlju
+            # ovde ce stavimo MIN-MAX algoritam kasnije
+            # ovde sam stavio random da testiram
             valid_moves = get_all_valid_moves(game_board)
             if valid_moves:
-                # --- PRIVREMENO RANDOM ---
+                # privremeno random
                 move = random.choice(valid_moves)
                 # Kasnije zameni sa: move = minimax_decision(game_board, current_color, N)
                 
-                # PAŽNJA: Tvoja funkcija 'play_move' očekuje string (npr "E5"), 
-                # ali 'get_all_valid_moves' vraća koordinate (q, r).
-                # Zato moramo direktno ažurirati tablu ovde za računar:
+               
                 game_board[move] = current_color
-                print(f"Računar je odigrao na internim koordinatama: {move}")
+                print(f"Racunar je odigrao na koordinatama: {move}")
             else:
-                print("Računar nema poteza!")
+                print("Racunar nema poteza!")
         else:
-            # Potez čoveka
+            # covek igra
             process_turn(game_board, N, current_color)
 
-        # --- PROVERA POBEDE ---
-        # Ovde koristimo silent=False da bi ispisalo pobednika na kraju
+        # provera pobede
+        # silent=False da bi se tek na kraju ispisao ko je pobednik
         if check_victory(game_board, current_color, N, silent=False):
             render_board(game_board, N)
             print(f"\n========================================")
@@ -562,7 +553,7 @@ if __name__ == "__main__":
         
         if not get_all_valid_moves(game_board):
             render_board(game_board, N)
-            print("\nNERESENO! Nema više slobodnih polja.")
+            print("\nNERESENO! Nema vise slobodnih polja.")
             game_running = False
             break
 

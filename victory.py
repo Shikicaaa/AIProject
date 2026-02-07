@@ -27,18 +27,19 @@ def check_victory(board, player_color, N, silent=False):
             if connected and min_path >= max_path:
                if not silent:
                     print(f"Pobedio je {player_color}! Povezana ostrva putanjom duzine {min_path}.")
-                    return True
+               return True
                 
     return False
 
 
-def is_game_over(board, N):
-    if check_victory(board, RED, N):
+def is_game_over(board, N, silent=False):
+
+    if check_victory(board, RED, N, silent=silent):
         return True, RED
-    if check_victory(board, GREEN, N):
+    if check_victory(board, GREEN, N, silent=silent):
         return True, GREEN
-    
+
     if not get_all_valid_moves(board):
         return True, "DRAW"
-        
+
     return False, None

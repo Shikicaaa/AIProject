@@ -58,7 +58,7 @@ def minimax(board, depth, alpha, beta, maximizing_player, player_color, N):
     if board_key in TRANSPOSITION_TABLE:
         return TRANSPOSITION_TABLE[board_key]
 
-    game_over, winner = is_game_over(board, N)
+    game_over, winner = is_game_over(board, N, silent=True)
     if game_over:
         if winner == player_color:
             return 100000 + depth

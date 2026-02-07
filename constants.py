@@ -1,0 +1,4 @@
+RED   = '\U0001F534'
+GREEN = '\U0001F7E2'
+WHITE = '\u26AA'
+EMPTY = '  '

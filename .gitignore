@@ -1,0 +1,6 @@
+*.rar
+*.txt
+.env
+*.diff
+__pycache__/
+*.pyc

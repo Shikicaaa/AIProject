@@ -66,3 +66,34 @@ def render_board(board, N):
     numbers = [str(i + 1) for i in range(2 * N - 1)]
     letters_str = "      \t" + "   " + "  ".join(numbers)
     print("\n" + letters_str + "\n")
+
+
+def get_island_map(N):
+    radius = N
+    island_map = {}
+
+    island_len = (N - 1) // 2
+
+    vectors = [(1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1)]
+
+    current_q, current_r = -radius, 0
+
+    island_counter = 1
+
+    for dq, dr in vectors:
+        current_q += dq
+        current_r += dr
+
+        for _ in range(island_len):
+            island_map[(current_q, current_r)] = island_counter
+            current_q += dq
+            current_r += dr
+        island_counter += 1
+
+        for _ in range(island_len):
+            island_map[(current_q, current_r)] = island_counter
+            current_q += dq
+            current_r += dr
+        island_counter += 1
+
+    return island_map

@@ -53,7 +53,6 @@ def main():
         
 
         if vs_computer and current_color == computer_color:
-            print(f"Racunar ({current_color}) razmislja... (Dubina: {AI_DEPTH})")
             
             best_move = get_best_move(game_board, AI_DEPTH, computer_color, N)
             
